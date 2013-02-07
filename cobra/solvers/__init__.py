@@ -50,20 +50,22 @@ else:
     ## solver specific problem file, given the complementary cobra.mod
     from os import listdir as _listdir
     from os import path as _path
-    for i in _listdir(_path.split(_path.abspath(__file__))[0]):
+    for i in _listdir(_path.dirname(_path.abspath(__file__))):
         if i.startswith("_") or i.startswith(".") or i == 'legacy.py':
             continue
         if not i.endswith(".py"):
             continue
+        if i == "parameters.py":
+            continue
         try:
-            m = i.strip(".py")
+            m = i[:-3]
             exec("from . import %s" % m)
             solver_name = m
             if solver_name.endswith('_solver'):
                 solver_name = solver_name[:-len('_solver')]
             solver_dict[solver_name] = eval(m)
         except Exception, e:
-            pass
+            None
     del _path
     del _listdir
     del i

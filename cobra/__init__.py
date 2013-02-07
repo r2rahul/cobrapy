@@ -11,6 +11,7 @@ if __name == 'java':
     from core import Object, Formula, Metabolite, Gene, Reaction, Model, DictList
 else:
     from core import *
+    import solvers
 
 del __name
 __doc__ = """

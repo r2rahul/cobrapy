@@ -9,7 +9,7 @@ from .parameters import status_dict, variable_kind_dict, \
      sense_dict, parameter_mappings, parameter_defaults, \
      objective_senses, default_objective_sense
 
-from .. import Solution
+from ..core import Solution
 from ..flux_analysis.objective import update_objective
 from time import time
 solver_name = 'gurobi'
