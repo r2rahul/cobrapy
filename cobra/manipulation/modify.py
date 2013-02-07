@@ -1,6 +1,6 @@
 #cobra.manipulation.modify.py
 from copy import deepcopy
-from cobra.core.Reaction import Reaction
+from .. import Reaction
 from warnings import warn
 def initialize_growth_medium(cobra_model, the_medium='MgM', 
                              external_boundary_compartment='e',

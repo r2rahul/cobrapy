@@ -6,7 +6,7 @@ from numpy import ones, nonzero, zeros
 from scipy import sparse
 from scipy.sparse import lil_matrix, dok_matrix
 from copy import deepcopy
-from .Model import Model
+from . import Model
 from warnings import warn
 #######################
 #BEGIN Class ArrayBasedModel

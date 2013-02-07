@@ -10,12 +10,7 @@ if __name == 'java':
     warn("COBRA for Python is not optimized for JAVA.  If it's slow or crashes consider increasing JVM memory")
     from core import Object, Formula, Metabolite, Gene, Reaction, Model, DictList
 else:
-    from core import Object, Formula, Metabolite, Gene, Reaction, Model, DictList
-    try:
-        from core import ArrayBasedModel
-    except Exception, e:
-        from warnings import warn
-        warn("cobra.ArrayBasedModel class is unavailable: %s"%repr(e))
+    from core import *
 
 del __name
 __doc__ = """

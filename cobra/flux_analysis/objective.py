@@ -1,6 +1,6 @@
 #cobra.flux_analysis.objective.py
 #functions for analyzing / creating objective functions
-from ..core.Reaction import Reaction
+from .. import Reaction
 from ..manipulation import initialize_growth_medium
 import sys
 if hasattr(sys, 'maxsize') and sys.maxsize > 2**32:
