@@ -164,7 +164,7 @@ def create_cobra_model_from_sbml_file(sbml_filename, old_sbml=False, legacy_meta
             tmp_metabolite_id = sbml_metabolite.getSpecies()
             #This deals with boundary metabolites
             if tmp_metabolite_id in metabolite_dict:
-                tmp_metabolite = deepcopy(metabolite_dict[tmp_metabolite_id])
+                tmp_metabolite = metabolite_dict[tmp_metabolite_id]
                 cobra_metabolites[tmp_metabolite] = -sbml_metabolite.getStoichiometry()
             else:
                 reaction.boundary = 'system_boundary'
@@ -172,7 +172,7 @@ def create_cobra_model_from_sbml_file(sbml_filename, old_sbml=False, legacy_meta
             tmp_metabolite_id = sbml_metabolite.getSpecies()
             #This deals with boundary metabolites
             if tmp_metabolite_id in metabolite_dict:
-                tmp_metabolite = deepcopy(metabolite_dict[tmp_metabolite_id])
+                tmp_metabolite = metabolite_dict[tmp_metabolite_id]
                 cobra_metabolites[tmp_metabolite] = sbml_metabolite.getStoichiometry()
             else:
                 reaction.boundary = 'system_boundary'
