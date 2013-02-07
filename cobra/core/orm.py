@@ -94,6 +94,7 @@ class QueryList:
         self.query = self._model.query(obj).order_by(obj.id.asc())
         for i in ["all", "__getitem__", "__iter__"]:
             setattr(self, i, getattr(self.query, i))
+        self.__len__ = self.query.count
     def get_by_id(self, id):
         result = self.query.filter_by(id=str(id)).one()
         if result is not None:
@@ -108,6 +109,7 @@ class Model(Session):
             engine = create_engine('sqlite:///:memory:', echo=False)
             Base.metadata.create_all(engine)
         super(Model, self).__init__(bind=engine)
+        self.engine = engine
         self.reactions = QueryList(self, Reaction)
         self.metabolites = QueryList(self, Metabolite)
     def add_reaction(self, reaction):
@@ -116,6 +118,31 @@ class Model(Session):
     def add_reactions(self, reaction_list):
         super(Model, self).add_all(reaction_list)
         self.commit()
+    def __getstate__(self):
+        objects = {}
+        objects["reactions"] = self.query(Reaction.id, Reaction.lower_bound,
+            Reaction.upper_bound, Reaction.objective_coefficient,
+            Reaction.subsystem, Reaction.variable_kind).all()
+        objects["metabolites"] = self.query(Metabolite.id, Metabolite._bound,
+            Metabolite._constraint_sense).all()
+        objects["stoichiometry"] = self.query(_ReactionMetabolites.reaction_id,
+            _ReactionMetabolites.metabolite_id,
+            _ReactionMetabolites.stoichiometry).all()
+        return objects
+
+    def __setstate__(self, objects):
+        self.__init__()
+        reactions = [Reaction(id=i[0], lower_bound=i[1], upper_bound=i[2],
+            objective_coefficient=i[3], subsystem=i[4], variable_kind=i[5])
+            for i in objects["reactions"]]
+        metabolites = [Metabolite(id=i[0], _bound=i[1], _constraint_sense=i[2])
+            for i in objects["metabolites"]]
+        stoichiometry = [_ReactionMetabolites(reaction_id=i[0],
+            metabolite_id=i[1], stoichiometry=i[2])
+            for i in objects["stoichiometry"]]
+        self.add_all(reactions)
+        self.add_all(metabolites)
+        self.add_all(stoichiometry)
 
 if __name__ == "__main__":
     model1 = Model()
