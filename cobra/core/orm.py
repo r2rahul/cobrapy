@@ -36,7 +36,7 @@ class Reaction(Base):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 1:
-            raise ValueError("too many arguments")
+            raise TypeError("Too many arguments supplied")
         if len(args) == 1:
             if "id" in kwargs:
                 raise ValueError("id specified by both arg and kwarg")
@@ -55,6 +55,7 @@ class Reaction(Base):
     def parse_gene_association(self):
         return None
 
+
 class Metabolite(Base):
     __tablename__ = "metabolites"
     id = Column(String(200), primary_key=True)
@@ -65,6 +66,16 @@ class Metabolite(Base):
     _bound = Column(Float, default=0.)
     reactions = relationship(Reaction,
         secondary=lambda: _ReactionMetabolites.__table__, viewonly=True)
+    
+    
+    def __init__(self, *args, **kwargs):
+        if len(args) > 1:
+            raise TypeError("Too many arguments supplied")
+        if len(args) == 1:
+            if "id" in kwargs:
+                raise ValueError("id specified by both arg and kwarg")
+            kwargs["id"] = args[0]
+        Base.__init__(self, **kwargs)
     
     @property
     def _reaction(self):
@@ -77,6 +88,7 @@ class Metabolite(Base):
     def __repr__(self):
         return str(self)
 
+
 class _ReactionMetabolites(Base):
     __tablename__ = "reaction_metabolites"
     reaction_id = Column(String(200),
@@ -87,6 +99,7 @@ class _ReactionMetabolites(Base):
     def __repr__(self):
         return "(%s, %s) %f" % \
             (self.reaction_id, self.metabolite_id, self.stoichiometry)
+
            
 class QueryList:
     def __init__(self, model, obj):
@@ -101,7 +114,7 @@ class QueryList:
             return result
         else:
             raise KeyError("id %s")
-        
+
 
 class Model(Session):
     def __init__(self, id="", engine=None):
