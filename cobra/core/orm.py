@@ -7,16 +7,18 @@ from sqlalchemy import create_engine, Column, String, Float, ForeignKey
 from numpy import array
 from scipy.sparse import dok_matrix
 
+from warnings import warn
+
 Base = declarative_base()
 Session = sessionmaker()
 
 class Reaction(Base):
     __tablename__ = "reactions"
     id = Column(String(200), primary_key=True)
-    lower_bound = Column(Float)
-    upper_bound = Column(Float)
+    lower_bound = Column(Float, default=-1000.)
+    upper_bound = Column(Float, default=1000.)
     subsystem = Column(String(200))
-    objective_coefficient = Column(Float)
+    objective_coefficient = Column(Float, default=0.)
     variable_kind = Column(String(20), default="continuous")
     # the reaction_metabolites are indexed by metabolite
     _reaction_metabolites = relationship("_ReactionMetabolites",
@@ -31,7 +33,7 @@ class Reaction(Base):
                                 metabolite=metabolite))
     @property
     def _metabolites(self):
-        # TODO warn
+        warn("deprecated call to _metabolites")
         return self.metabolites
 
     def __init__(self, *args, **kwargs):
@@ -54,6 +56,36 @@ class Reaction(Base):
     
     def parse_gene_association(self):
         return None
+    
+    def reconstruct_reaction(self): warn("depracated")
+
+    @property
+    def reaction(self):
+        """Generate a human readable reaction string."""
+        reactant_dict = {}
+        product_dict = {}
+        def coefficient_to_string(number):
+            if number == 1:
+                return ""
+            if number == int(number):
+                return str(int(number))
+            return "%.2f" % number
+        for metabolite, coefficient in self.metabolites.items():
+            id = metabolite.id
+            if coefficient > 0:
+                product_dict[id] = coefficient_to_string(coefficient)
+            else:
+                reactant_dict[id] = coefficient_to_string(abs(coefficient))
+        reactant_string = " + ".join(['%s %s' % (coefficient_str, metabolite) for metabolite, coefficient_str in reactant_dict.items()])
+        if self.upper_bound <= 0:
+            arrow = ' <- '
+        elif self.lower_bound >= 0:
+            arrow = ' -> '                
+        else:
+            arrow = ' <=> '
+        product_string = " + ".join(['%s %s' % (coefficient_str, metabolite) for metabolite, coefficient_str in product_dict.items()])
+        reaction_string = reactant_string + arrow + product_string
+        return reaction_string
 
 
 class Metabolite(Base):
@@ -66,8 +98,7 @@ class Metabolite(Base):
     _bound = Column(Float, default=0.)
     reactions = relationship(Reaction,
         secondary=lambda: _ReactionMetabolites.__table__, viewonly=True)
-    
-    
+
     def __init__(self, *args, **kwargs):
         if len(args) > 1:
             raise TypeError("Too many arguments supplied")
@@ -79,7 +110,7 @@ class Metabolite(Base):
     
     @property
     def _reaction(self):
-        # TODO warn
+        warn("deprecated call to _reactions")
         return self.reactions
     
     def __str__(self):
@@ -104,16 +135,47 @@ class _ReactionMetabolites(Base):
 class QueryList:
     def __init__(self, model, obj):
         self._model = model
-        self.query = self._model.query(obj).order_by(obj.id.asc())
-        for i in ["all", "__getitem__", "__iter__"]:
+        self._obj = obj
+        self.query = self._model.query(obj).order_by(obj.id.desc())
+        
+        for i in ["all", "__iter__"]:
             setattr(self, i, getattr(self.query, i))
         self.__len__ = self.query.count
+        # create functions to get all attributes of the given class
+
+    def list_attr(self, attribute):
+        warn("depracated call to list_attr")
+        return self._model.query(getattr(self._obj, attribute)).order_by(self._obj.id.desc()).all()
+
     def get_by_id(self, id):
+        """return an object by its id"""
         result = self.query.filter_by(id=str(id)).one()
         if result is not None:
             return result
         else:
             raise KeyError("id %s")
+
+    def __getitem__(self, key):
+        if type(key) is int:
+            return self.query[key]
+        else:
+            return self.get_by_id(key)
+
+    def __dir__(self):
+        attributes = self.__class__.__dict__.keys()
+        attributes.extend([i[0] for i in self._model.query(self._obj.id).all()])
+        return attributes
+
+    def __getattr__(self, attr):
+        try:
+            return super(QueryList, self).__getattribute__(attr)
+        except:
+            func = super(QueryList, self).__getattribute__("get_by_id")
+            try:
+                return func(attr)
+            except:
+                raise AttributeError("Item %s not found" % (attr))
+
 
 
 class Model(Session):
