@@ -47,6 +47,10 @@ class Reaction(Base):
 
     def add_metabolites(self, metabolite_dict):
         self.metabolites.update(metabolite_dict)
+        if self.id == "EX_glc_e":
+            print "hello"
+        if self.id == "PGI":
+            print "hello2"
 
     def __str__(self):
         return str(self.id)
@@ -178,29 +182,35 @@ class QueryList:
 
 
 
-class Model(Session):
+class Model:
     def __init__(self, id="", engine=None):
         if engine is None:
             engine = create_engine('sqlite:///:memory:', echo=False)
             Base.metadata.create_all(engine)
-        super(Model, self).__init__(bind=engine)
+        self.session = Session(bind=engine)
         self.engine = engine
+        # add relevant functions from session
+        for attr in ["add", "add_all", "query", "commit"]:
+            setattr(self, attr, getattr(self.session, attr))
+
         self.reactions = QueryList(self, Reaction)
         self.metabolites = QueryList(self, Metabolite)
+    
+    
     def add_reaction(self, reaction):
-        self.add(reaction)
-        self.commit()
+        self.session.add(reaction)
+        self.session.commit()
     def add_reactions(self, reaction_list):
-        super(Model, self).add_all(reaction_list)
+        self.session.add_all(reaction_list)
         self.commit()
     def __getstate__(self):
         objects = {}
-        objects["reactions"] = self.query(Reaction.id, Reaction.lower_bound,
+        objects["reactions"] = self.session.query(Reaction.id, Reaction.lower_bound,
             Reaction.upper_bound, Reaction.objective_coefficient,
             Reaction.subsystem, Reaction.variable_kind).all()
-        objects["metabolites"] = self.query(Metabolite.id, Metabolite._bound,
+        objects["metabolites"] = self.session.query(Metabolite.id, Metabolite._bound,
             Metabolite._constraint_sense).all()
-        objects["stoichiometry"] = self.query(_ReactionMetabolites.reaction_id,
+        objects["stoichiometry"] = self.session.query(_ReactionMetabolites.reaction_id,
             _ReactionMetabolites.metabolite_id,
             _ReactionMetabolites.stoichiometry).all()
         return objects
@@ -225,7 +235,8 @@ if __name__ == "__main__":
     rxn2 = Reaction(id="test_reaction2")
     met1 = Metabolite(id="met1")
     met2 = Metabolite(id="met2")
-    rxn1.metabolites[met1] = 1
+    #rxn1.metabolites[met1] = 1
+    rxn1.add_metabolites({met1: 1})
     rxn1.metabolites[met2] = -1
     rxn2.metabolites[met1] = 1
     model1.add_all([rxn1, rxn2])
