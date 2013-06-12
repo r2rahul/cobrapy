@@ -12,6 +12,12 @@ from warnings import warn
 Base = declarative_base()
 Session = sessionmaker()
 
+# Because sqlite does not do ON UPDATE CASCADE, it needs this to be false.
+# However, on other databases, setting this to False incurs a performance
+# penalty and should be set to True. 
+_passive_updates = False
+
+
 class Reaction(Base):
     __tablename__ = "reactions"
     id = Column(String(200), primary_key=True)
@@ -23,6 +29,7 @@ class Reaction(Base):
     # the reaction_metabolites are indexed by metabolite
     _reaction_metabolites = relationship("_ReactionMetabolites",
         backref="reaction",
+        passive_updates=_passive_updates,
         collection_class=attribute_mapped_collection("metabolite"))
     # the metabolites are a dict. The values will be the stoichiometry of
     # the reaction_metabolite. The values are already indexed by
@@ -47,10 +54,6 @@ class Reaction(Base):
 
     def add_metabolites(self, metabolite_dict):
         self.metabolites.update(metabolite_dict)
-        if self.id == "EX_glc_e":
-            print "hello"
-        if self.id == "PGI":
-            print "hello2"
 
     def __str__(self):
         return str(self.id)
@@ -96,6 +99,7 @@ class Metabolite(Base):
     __tablename__ = "metabolites"
     id = Column(String(200), primary_key=True)
     _reaction_metabolites = relationship("_ReactionMetabolites",
+        passive_updates=_passive_updates,
         backref="metabolite")
     #formula = Column(String(400))
     _constraint_sense = Column(String(1), default="E")
@@ -131,6 +135,7 @@ class _ReactionMetabolites(Base):
     metabolite_id = Column(String(200),
         ForeignKey("metabolites.id"), primary_key=True)
     stoichiometry = Column(Float)
+
     def __repr__(self):
         return "(%s, %s) %f" % \
             (self.reaction_id, self.metabolite_id, self.stoichiometry)
@@ -153,11 +158,11 @@ class QueryList:
 
     def get_by_id(self, id):
         """return an object by its id"""
-        result = self.query.filter_by(id=str(id)).one()
+        result = self.query.filter_by(id=str(id)).first()
         if result is not None:
             return result
         else:
-            raise KeyError("id %s")
+            raise KeyError("id %s" % id)
 
     def __getitem__(self, key):
         if type(key) is int:
