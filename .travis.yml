@@ -13,5 +13,6 @@ before_install:
 install:
   - ln -s /usr/lib/python2.7/dist-packages/scipy ~/virtualenv/python2.7/lib/python2.7/site-packages/
   - pip install http://clostridium.ucsd.edu/pyglpk-0.3_fix.tar.bz2
+  - pip install sqlalchemy
 # # command to run tests
 script: python setup.py test
