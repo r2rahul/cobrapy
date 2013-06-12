@@ -9,14 +9,14 @@ For usage instructions, please see the
 --------------------------------------------------------------------------------
 
 # Python
-All releases require Python 2.7 (or 2.6) to be installed before proceeding. 
+All releases require Python 2.7 to be installed before proceeding. 
 Mac OS X (10.7+) and Ubuntu ship with Python. Windows users without python 
 can download and install python from the [python 
 website](http://www.python.org/download/releases/2.7.3/).
 
 Generally, installation should follow these steps:
 
-1. Install cobrapy (either the stable or the development version).
+1. Install cobrapy (either the stable, development, or hacking version).
 2. Install an appropriate solver
 3. Install optional dependencies
 4. Test your installation
@@ -28,14 +28,25 @@ the following command in a terminal.
 
     sudo easy_install cobrapy
 
-For Windows, download and install either the [32 
-bit](https://pypi.python.org/packages/2.7/c/cobra/cobra-0.2.0.win32.exe) or 
-64 bit installer.
+For Windows, download and install the appropriate 32 bit or 64 bit installer,
+both of which can be downloaded from the [python package
+index](https://pypi.python.org/pypi/cobra/).
 
 ## Development version installation in Python
 Use easy_install (or pip if you have it)
 
     sudo easy_install https://github.com/opencobra/cobrapy/archive/master.zip
+
+## Hacking version installation in Python
+First, clone the git repository using your preferred mothod. Cloning from your
+own github fork is recommended! Afterwards, open a terminal, enter the cobrapy
+repository and run the following command:
+
+    python setup.py develop --user
+
+If the command fails with an error about the --user option not being recognized,
+it means setuptools is not installed. Either install setuptools before
+trying again, or instead run ```sudo python setup.py develop```
 
 ## Installation of a Solver in Python
 Currently cobrapy supports three linear programming solvers: ILOG/CPLEX, 
@@ -57,14 +68,17 @@ Please note that pyGLPK is not the same as python-glpk.
 
 #### GNU/Linux Installation of pyGLPK in Python
 1. Install the glpk and gmp library packages. You will need the development 
-versions if they are available. For example, Ubuntu users would type the 
-following into the command line:
+versions if they are available. You will also need development headers for 
+Python itself. For example, Ubuntu and Debian Wheezy (7.0) users would type the following into the 
+command line:
 ```
-    sudo apt-get install libglpk-dev libgmp-dev
+    sudo apt-get install libglpk-dev libgmp-dev python-dev python-setuptools
 ```
+Debian Squeeze (6.0) users will need to build libgmp from source.
+
 2. install pyglpk with easy_install using the following command in the terminal:
 ```
-    sudo easy_install http://tfinley.net/software/pyglpk/pyglpk-0.3.tar.bz2
+    sudo easy_install glpk 
 ```
 
 #### MAC OS X Installation of pyGLPK in Python
@@ -78,7 +92,7 @@ using macports then just use that to install glpk.
 
 2. install pyglpk with easy_install using the following command in the terminal:
 ```
-    sudo easy_install http://tfinley.net/software/pyglpk/pyglpk-0.3.tar.bz2
+    sudo easy_install glpk
 ```
 
 #### Windows Installation of pyGLPK in Python
@@ -92,7 +106,7 @@ many can downloaded from [this site](http://www.lfd.uci.edu/~gohlke/pythonlibs/)
 1. [libsbml](http://sbml.org) >= 4.0 to read/write SBML files
   * [Windows installer](http://www.lfd.uci.edu/~gohlke/pythonlibs/#libsbml)
 2. [numpy](http://numpy.org) >= 1.6.1 and [scipy](http://scipy.org) >= 0.11 for 
-ArrayBasedModel, MoMA, double_deletion analysis, and saving to MAT formats.
+ArrayBasedModel, double_deletion analysis, and saving to MAT formats.
   * Windows installers for 
   [numpy](http://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy) and 
   [scipy](http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy)
