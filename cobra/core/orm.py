@@ -185,6 +185,9 @@ class QueryList:
             except:
                 raise AttributeError("Item %s not found" % (attr))
 
+    def _generate_index(self):
+        warn("depracated call to _generate_index")
+
 
 
 class Model:
