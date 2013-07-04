@@ -17,15 +17,46 @@ Session = sessionmaker()
 # penalty and should be set to True. 
 _passive_updates = False
 
+class Gene(Base):
+    __tablename__ = "genes"
+    id = Column(String(30), primary_key=True)
+
+class _ReactionGenes(Base):
+    __tablename__ = "reaction_genes"
+    reaction_id = Column(String(200),
+        ForeignKey("reactions.id"), primary_key=True)
+    gene_id = Column(String(30),
+        ForeignKey("genes.id"), primary_key=True)
 
 class Reaction(Base):
     __tablename__ = "reactions"
     id = Column(String(200), primary_key=True)
+    name = Column(String(200))
+    subsystem = Column(String(200))
+
     lower_bound = Column(Float, default=-1000.)
     upper_bound = Column(Float, default=1000.)
-    subsystem = Column(String(200))
     objective_coefficient = Column(Float, default=0.)
     variable_kind = Column(String(20), default="continuous")
+    
+    # to populate the many to many relationship between genes and reactions,
+    # we need to use a setter and a getter for the gene_reaction_rule attribute
+    _gene_reaction_rule = Column("gene_reaction_rule", String(200))
+    genes = relationship(Gene,
+        secondary=_ReactionGenes.__table__, viewonly=True,
+        backref=backref("reactions", viewonly=True))
+    
+    @property  # should this be hybrid_property?
+    def gene_reaction_rule(self):
+        return self._gene_reaction_rule
+    
+    @gene_reaction_rule.setter
+    def gene_reaction_rule(self, rule):
+        self._gene_reaction_rule = rule
+        # TODO populate _ReactionGenes appropriately
+    
+    
+    
     # the reaction_metabolites are indexed by metabolite
     _reaction_metabolites = relationship("_ReactionMetabolites",
         backref="reaction",
