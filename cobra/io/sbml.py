@@ -538,11 +538,19 @@ def read_legacy_sbml(filename, use_hyphens=False):
     model = create_cobra_model_from_sbml_file(filename)
     for metabolite in model.metabolites:
         metabolite.id = fix_legacy_id(metabolite.id)
-    #model.metabolites._generate_index()
+    model.metabolites._generate_index()
     for reaction in model.reactions:
         reaction.id = fix_legacy_id(reaction.id)
         if reaction.id.startswith("EX_") and reaction.id.endswith("(e)"):
             reaction.id = reaction.id[:-3] + "_e"
         reaction.reconstruct_reaction()
-    #model.reactions._generate_index()
+    model.reactions._generate_index()
+    # remove boundary metabolites (end in _b and only present in exchanges)
+    for metabolite in model.metabolites:
+        if not metabolite.id.endswith("_b"):
+            continue
+        if len(metabolite._reaction) == 1:
+            if list(metabolite._reaction)[0].id.startswith("EX_"):
+                metabolite.remove_from_model()
+    model.metabolites._generate_index()
     return model
