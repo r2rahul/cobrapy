@@ -1,5 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref, Query
+from sqlalchemy.orm import object_session
+from sqlalchemy import event
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy import create_engine, Column, String, Float, ForeignKey
@@ -12,6 +14,11 @@ from warnings import warn
 Base = declarative_base()
 Session = sessionmaker()
 
+@event.listens_for(Session, "after_attach")
+def _on_session_add(session, instance):
+    if hasattr(instance, "_on_session_add"):
+        instance._update_gene_mapping()
+
 # Because sqlite does not do ON UPDATE CASCADE, it needs this to be false.
 # However, on other databases, setting this to False incurs a performance
 # penalty and should be set to True. 
@@ -20,6 +27,12 @@ _passive_updates = False
 class Gene(Base):
     __tablename__ = "genes"
     id = Column(String(30), primary_key=True)
+    
+    def __str__(self):
+        return "Gene " + self.id
+    
+    def __repr__(self):
+        return str(self)
 
 class _ReactionGenes(Base):
     __tablename__ = "reaction_genes"
@@ -45,6 +58,8 @@ class Reaction(Base):
     genes = relationship(Gene,
         secondary=_ReactionGenes.__table__, viewonly=True,
         backref=backref("reactions", viewonly=True))
+    # can be appended to
+    _genes = relationship(Gene, secondary=_ReactionGenes.__table__)
     
     @property  # should this be hybrid_property?
     def gene_reaction_rule(self):
@@ -53,9 +68,35 @@ class Reaction(Base):
     @gene_reaction_rule.setter
     def gene_reaction_rule(self, rule):
         self._gene_reaction_rule = rule
-        # TODO populate _ReactionGenes appropriately
-    
-    
+        # If the object is associated with a session update the mapping. If
+        # not, the listener will handle it after it is attached to one
+        if object_session(self) is not None:
+            self._update_gene_mapping()
+
+    def _on_session_add(session, instance):
+        instance._update_gene_mapping()
+
+    def _update_gene_mapping(self):
+        """populate _ReactionGenes appropriately given gene_reaction_rule"""
+        # TODO use regular expressions to speed up
+        self._genes = []
+        list_string = self._gene_reaction_rule
+        if list_string is None:
+            return
+        if len(list_string) == 0:
+            return
+        list_string = list_string.replace("and", "")
+        list_string = list_string.replace("AND", " ")
+        list_string = list_string.replace("or", " ")
+        list_string = list_string.replace("OR", " ")
+        list_string = list_string.replace("(", " ")
+        list_string = list_string.replace(")", " ")
+        session = object_session(self)
+        for gene_id in set(list_string.split()):
+            new_gene = session.query(Gene).filter_by(id=gene_id).first()
+            if new_gene is None:
+                new_gene = Gene(id=gene_id)
+            self._genes.append(new_gene)
     
     # the reaction_metabolites are indexed by metabolite
     _reaction_metabolites = relationship("_ReactionMetabolites",
@@ -106,22 +147,22 @@ class Reaction(Base):
             if number == 1:
                 return ""
             if number == int(number):
-                return str(int(number))
-            return "%.2f" % number
+                return str(int(number)) + " "
+            return "%.2f " % number
         for metabolite, coefficient in self.metabolites.items():
             id = metabolite.id
             if coefficient > 0:
                 product_dict[id] = coefficient_to_string(coefficient)
             else:
                 reactant_dict[id] = coefficient_to_string(abs(coefficient))
-        reactant_string = " + ".join(['%s %s' % (coefficient_str, metabolite) for metabolite, coefficient_str in reactant_dict.items()])
+        reactant_string = " + ".join(['%s%s' % (coefficient_str, metabolite) for metabolite, coefficient_str in reactant_dict.items()])
         if self.upper_bound <= 0:
             arrow = ' <- '
         elif self.lower_bound >= 0:
             arrow = ' -> '                
         else:
             arrow = ' <=> '
-        product_string = " + ".join(['%s %s' % (coefficient_str, metabolite) for metabolite, coefficient_str in product_dict.items()])
+        product_string = " + ".join(['%s%s' % (coefficient_str, metabolite) for metabolite, coefficient_str in product_dict.items()])
         reaction_string = reactant_string + arrow + product_string
         return reaction_string
 
@@ -172,7 +213,7 @@ class _ReactionMetabolites(Base):
             (self.reaction_id, self.metabolite_id, self.stoichiometry)
 
            
-class QueryList:
+class QueryList(object):
     def __init__(self, model, obj):
         self._model = model
         self._obj = obj
@@ -194,7 +235,7 @@ class QueryList:
             return result
         else:
             raise KeyError("id %s" % id)
-
+    
     def __getitem__(self, key):
         if type(key) is int:
             return self.query[key]
