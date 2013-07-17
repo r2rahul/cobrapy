@@ -230,7 +230,7 @@ class QueryList(object):
 
     def get_by_id(self, id):
         """return an object by its id"""
-        result = self.query.filter_by(id=str(id)).first()
+        result = self.query.get(str(id))
         if result is not None:
             return result
         else:
@@ -240,7 +240,7 @@ class QueryList(object):
         if type(key) is int:
             return self.query[key]
         else:
-            return self.get_by_id(key)
+            return self.query.get(key)
 
     def __dir__(self):
         attributes = self.__class__.__dict__.keys()
@@ -251,10 +251,11 @@ class QueryList(object):
         try:
             return super(QueryList, self).__getattribute__(attr)
         except:
-            func = super(QueryList, self).__getattribute__("get_by_id")
-            try:
-                return func(attr)
-            except:
+            query = super(QueryList, self).__getattribute__("query")
+            result = query.get(attr)
+            if result is not None:
+                return result
+            else:
                 raise AttributeError("Item %s not found" % (attr))
 
     def _generate_index(self):
