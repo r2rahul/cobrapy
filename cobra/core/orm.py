@@ -78,13 +78,14 @@ class Reaction(Base):
 
     def _update_gene_mapping(self):
         """populate _ReactionGenes appropriately given gene_reaction_rule"""
-        # TODO use regular expressions to speed up
         self._genes = []
         list_string = self._gene_reaction_rule
         if list_string is None:
             return
         if len(list_string) == 0:
             return
+        # replacement is faster than regular expression, which would be
+        # re.compile("(and)|(or)|\(|\)", re.IGNORECASE)
         list_string = list_string.replace("and", "")
         list_string = list_string.replace("AND", " ")
         list_string = list_string.replace("or", " ")
@@ -289,7 +290,7 @@ class Model:
         objects = {}
         objects["reactions"] = self.session.query(Reaction.id, Reaction.lower_bound,
             Reaction.upper_bound, Reaction.objective_coefficient,
-            Reaction.subsystem, Reaction.variable_kind).all()
+            Reaction.subsystem, Reaction.variable_kind, Reaction._gene_reaction_rule).all()
         objects["metabolites"] = self.session.query(Metabolite.id, Metabolite._bound,
             Metabolite._constraint_sense).all()
         objects["stoichiometry"] = self.session.query(_ReactionMetabolites.reaction_id,
@@ -299,25 +300,25 @@ class Model:
 
     def __setstate__(self, objects):
         self.__init__()
-        reactions = [Reaction(id=i[0], lower_bound=i[1], upper_bound=i[2],
-            objective_coefficient=i[3], subsystem=i[4], variable_kind=i[5])
-            for i in objects["reactions"]]
+        # adding gprs makes this super slow - TODO speedup
+        self.add_all((Reaction(id=i[0], lower_bound=i[1], upper_bound=i[2],
+            objective_coefficient=i[3], subsystem=i[4], variable_kind=i[5], _gene_reaction_rule=i[6])
+            for i in objects["reactions"]))
         metabolites = [Metabolite(id=i[0], _bound=i[1], _constraint_sense=i[2])
             for i in objects["metabolites"]]
         stoichiometry = [_ReactionMetabolites(reaction_id=i[0],
             metabolite_id=i[1], stoichiometry=i[2])
             for i in objects["stoichiometry"]]
-        self.add_all(reactions)
         self.add_all(metabolites)
         self.add_all(stoichiometry)
 
     def cache(self):
         """access all attributes to cause them to get cached in memory"""
         self.reactions.all()
-        self.metabolite_id.all()
-        for i in model.reactions:
+        self.metabolites.all()
+        for i in self.reactions:
             i.metabolites
-        for i in model.metabolites:
+        for i in self.metabolites:
             i.reactions
         
 
