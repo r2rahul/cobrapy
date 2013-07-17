@@ -262,7 +262,6 @@ class QueryList(object):
         warn("depracated call to _generate_index")
 
 
-
 class Model:
     def __init__(self, id="", engine=None):
         if engine is None:
@@ -276,14 +275,16 @@ class Model:
 
         self.reactions = QueryList(self, Reaction)
         self.metabolites = QueryList(self, Metabolite)
-    
-    
+        self.genes = QueryList(self, Gene)
+
     def add_reaction(self, reaction):
         self.session.add(reaction)
         self.session.commit()
+
     def add_reactions(self, reaction_list):
         self.session.add_all(reaction_list)
         self.commit()
+
     def __getstate__(self):
         objects = {}
         objects["reactions"] = self.session.query(Reaction.id, Reaction.lower_bound,
@@ -309,6 +310,17 @@ class Model:
         self.add_all(reactions)
         self.add_all(metabolites)
         self.add_all(stoichiometry)
+
+    def cache(self):
+        """access all attributes to cause them to get cached in memory"""
+        self.reactions.all()
+        self.metabolite_id.all()
+        for i in model.reactions:
+            i.metabolites
+        for i in model.metabolites:
+            i.reactions
+        
+
 
 if __name__ == "__main__":
     model1 = Model()
