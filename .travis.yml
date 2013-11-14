@@ -15,9 +15,9 @@ before_install:
   - sudo make install
   - cd $TRAVIS_BUILD_DIR
   - if [ "$JYTHON" == "true"]; then sudo apt-get install glpk-java; fi
-  - if [ "$JYTHON" == "true"]; then wget http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7-b1/jython-installer-2.7-b1.jar; fi
+  - if [ "$JYTHON" == "true"]; then wget http://clostridium.ucsd.edu/jython-installer-2.7-b1.jar; fi
   - if [ "$JYTHON" == "true"]; then java -jar jython-installer-2.7-b1.jar -s -d $HOME/jython; fi
-  - if [ "$JYTHON" == "true" ]; then export PYTHON_EXE=$HOME/jython/jython; jython -c "print ''"; else export PYTHON_EXE=python; fi
+  - if [ "$JYTHON" == "true" ]; then export PYTHON_EXE=$HOME/jython/jython; $PYTHON_EXE -c "print ''"; else export PYTHON_EXE=python; fi
 
 install:
   - ln -s /usr/lib/python2.7/dist-packages/scipy ~/virtualenv/python2.7/lib/python2.7/site-packages/
