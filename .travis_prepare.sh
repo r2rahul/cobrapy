@@ -5,10 +5,7 @@ if [ "$JYTHON" = "true" ]; then
     sudo apt-get install libglpk-java
     wget http://clostridium.ucsd.edu/jython-installer-2.7-b1.jar
     wget http://clostridium.ucsd.edu/jsbml-0.8-with-dependencies.jar
-    export JYTHONPATH="/usr/share/java/glpk-java:jsbml-0.8-with-dependencies.jar"
     java -jar jython-installer-2.7-b1.jar -s -d $HOME/jython
-    export PYTHON_EXE=$HOME/jython/jython
-    $PYTHON_EXE -c "print ''"
 fi
 
 if [ "$JYTHON" = "false" ]; then
@@ -19,7 +16,6 @@ if [ "$JYTHON" = "false" ]; then
     tar xzf libsbml-5.6.0_built_with_py.tar.gz
     cd libsbml-5.6.0/
     sudo make install
-    export PYTHON_EXE=python
 fi
 
 cd $TRAVIS_BUILD_DIR
