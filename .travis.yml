@@ -6,6 +6,6 @@ env:
 virtualenv:
   system_site_packages: true
 
-install: .travis_prepare.sh
+install: ./.travis_prepare.sh
 
 script: $PYTHON_EXE setup.py test
