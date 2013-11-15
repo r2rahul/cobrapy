@@ -2,7 +2,7 @@
 cd $HOME # home should be in /home/travis
 
 if [ "$JYTHON" = "true" ]; then
-    sudo apt-get install libglpk-java
+    sudo apt-get install libglpk-java libglpk0
     wget http://clostridium.ucsd.edu/jython-installer-2.7-b1.jar
     wget http://clostridium.ucsd.edu/jsbml-0.8-with-dependencies.jar
     java -jar jython-installer-2.7-b1.jar -s -d $HOME/jython
