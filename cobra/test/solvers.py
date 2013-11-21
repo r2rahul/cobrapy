@@ -1,5 +1,6 @@
-from unittest import TestCase, TestLoader, TextTestRunner
+from unittest import TestCase, TestLoader, TextTestRunner, skipIf
 import sys
+from os import name
 # deal with absolute imports by adding the appropriate directory to the path
 if __name__ == "__main__":
     sys.path.insert(0, "../..")
@@ -75,6 +76,7 @@ def add_new_test(TestCobraSolver, solver_name, solver):
         override_minimize = solver.format_solution(minimize, self.model)
         self.assertAlmostEqual(max_solution.f, override_minimize.f, places=4)
 
+    @skipIf(solver_name == "glpk" and name == "java", "java-glpk crashes on MIP")
     def solve_mip(self):
         cone_selling_price = 7.
         cone_production_cost = 3.
