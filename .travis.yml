@@ -9,7 +9,7 @@ virtualenv:
 install: ./.travis_prepare.sh
 
 before_script:
-    - if [ "$JYTHON" == "true" ]; then export PYTHON_EXE="$HOME/jython/jython -J-Djava.library.path=/usr/lib/jni"; else export PYTHON_EXE=python; fi
+    - if [ "$JYTHON" == "true" ]; then export PYTHON_EXE="$HOME/jython/jython -J-Djava.library.path=/usr/lib/jni -J-Xmx2048M"; else export PYTHON_EXE=python; fi
     - if [ "$JYTHON" == "true" ]; then export JYTHONPATH="/usr/share/java/glpk-java.jar:$HOME/jsbml-0.8-with-dependencies.jar"; fi
     - $PYTHON_EXE -c "print ''"
 
