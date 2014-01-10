@@ -2,6 +2,7 @@ from unittest import TestCase, TestLoader, TextTestRunner
 
 from warnings import warn
 import sys
+from os import name
 _module_function_dict = {'double_deletion': 'double_deletion',
                           'single_deletion': 'single_deletion',
                           'variability': 'flux_variability_analysis'}
@@ -107,7 +108,7 @@ class TestCobraFluxAnalysis(TestCase):
                     self.assertAlmostEqual(growth_dict[gene_x][gene_y], the_rate,
                                            places=2)
 
-    if _module_function_dict['variability']:
+    if _module_function_dict['variability'] and name != "java":
         def test_flux_variability(self):
             """
 
