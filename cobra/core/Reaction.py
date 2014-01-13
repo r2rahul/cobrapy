@@ -17,11 +17,11 @@ try:
     PyDictProxy_New.argtypes = (py_object,)
     PyDictProxy_New.rettype = py_object
 
-    def make_dictproxy(obj):
+    def _make_dictproxy(obj):
         assert isinstance(obj,dict)
         return PyObj_FromPtr(PyDictProxy_New(obj))
 except:
-    make_dictproxy = lambda x: x
+    _make_dictproxy = lambda x: x
 
 class Reaction(Object):
     """Reaction is a class for holding information regarding
@@ -37,9 +37,6 @@ class Reaction(Object):
         """An object for housing reactions and associated information
         for cobra modeling..
 
-        boundary: Boolean.  Indicates whether the reaction is at a boundary, i.e.,
-        a source or a sink.
-        
         """
         Object.__init__(self, name)
         self._gene_reaction_rule = ''
@@ -66,7 +63,7 @@ class Reaction(Object):
     # read-only
     @property
     def metabolites(self):
-        return make_dictproxy(self._metabolites)
+        return _make_dictproxy(self._metabolites)
 
     @property
     def genes(self):
@@ -83,16 +80,15 @@ class Reaction(Object):
 
     @property
     def reversibility(self):
-        """This property removes the independence of the reversibility attribute and the reaction's
-        current upper and lower bounds.
-
-        reversibility is defined in the context of the current instantiation.
-        
-        """
+        """The reaction's reversibility computed from its bounds"""
         return self.lower_bound < 0 and self.upper_bound > 0
     
     @property
     def boundary(self):
+        """If the reaction is a system boundary
+        
+        A system boundary brings metabolites into the system
+        """
         # single metabolite implies it must be a boundary
         if len(self._metabolites) == 1:
             return "system_boundary"
@@ -121,7 +117,8 @@ class Reaction(Object):
     def remove_from_model(self, model=None):
         """Removes the association
 
-        model: cobra.Model object.  remove the reaction from this model.
+        :param model: remove the reaction from this model.
+        :type model: :class:`~cobra.core.Model`
         
         """
         # why is model being taken in as a parameter? This plays
@@ -335,17 +332,13 @@ class Reaction(Object):
 
     @property
     def reactants(self):
-        """Return a list of reactants for the reaction.
-
-        """
+        """Return a list of reactants for the reaction."""
         return [k for k, v in self._metabolites.items()
                 if v < 0]
 
     @property
     def products(self):
-        """Return a list of products for the reaction
-        
-        """
+        """Return a list of products for the reaction"""
         return [k for k, v in self._metabolites.items()
                 if v > 0]
 
@@ -357,19 +350,19 @@ class Reaction(Object):
         return list(self._genes)
 
 
-    def get_coefficient(self, the_metabolite):
+    def get_coefficient(self, metabolite_id):
         """Return the stoichiometric coefficient for a metabolite in
         the reaction.
 
-        the_metabolite: A metabolite Id.
+        :param metabolite_id: The id for a metabolite in the reaction
         
         """
         _id_to_metabolites = dict([(x.id, x)
                                         for x in self._metabolites])
 
-        if hasattr(the_metabolite, 'id'):
-            the_metabolite = the_metabolite.id
-        return self._metabolites[_id_to_metabolites[the_metabolite]]
+        if hasattr(metabolite_id, 'id'):
+            metabolite_id = metabolite_id.id
+        return self._metabolites[_id_to_metabolites[metabolite_id]]
     
     def get_coefficients(self, the_metabolites):
         """Return the stoichiometric coefficients for a list of
@@ -432,12 +425,12 @@ class Reaction(Object):
 
         .. note:: That a final coefficient < 0 implies a reactant.
 
-        metabolites: dict of {:class:`~cobra.core.Metabolite`: coefficient}
-            These metabolites will be added to the reaction
+        :param metabolites: These metabolites will be added to the reaction
+        :type metabolites: dict of {:class:`~cobra.core.Metabolite`: coefficient}
 
         .. note:: This function uses deepcopy in case the reaction is being
         subtracted from itself.
-        
+
         """
         metabolites = deepcopy(metabolites)
         metabolites = dict([(k, -v)
@@ -446,6 +439,7 @@ class Reaction(Object):
 
     @property
     def reaction(self):
+        """a human-readable reaction string"""
         return self.build_reaction_string()
 
 
@@ -523,7 +517,7 @@ class Reaction(Object):
     def remove_gene(self, cobra_gene):
         """Removes the association between a gene and a reaction
 
-        cobra_gene: :class:`~cobra.core.Gene`. A gene that is associated with the reaction.
+        :param cobra_gene: A :class:`~cobra.core.Gene` that is associated with the reaction.
         
         """
         #warn("deprecated: update the gene_reaction_rule instead")
@@ -541,7 +535,7 @@ class Reaction(Object):
     def add_gene(self, cobra_gene):
         """Associates a cobra.Gene object with a cobra.Reaction.
 
-        cobra_gene: :class:`~cobra.core.Gene`. A gene to associate with the reaction.
+        cobra_gene: A :class:`~cobra.core.Gene` to associate with the reaction.
         """
         #warn("deprecated: update the gene_reaction_rule instead")
         try:
@@ -555,4 +549,3 @@ class Reaction(Object):
                     self.add_gene(cobra_gene)
             except:
                 raise Exception('Unable to add gene %s to reaction %s: %s'%(cobra_gene.id, self.id, e))
-                            

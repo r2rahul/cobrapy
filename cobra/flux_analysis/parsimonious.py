@@ -10,14 +10,10 @@ def optimize_minimal_flux(model, already_irreversible=False,
     flux. Finally, it will convert the reaction back to the irreversible
     form it was in before. See http://dx.doi.org/10.1038/msb.2010.47
 
-    Parameters
-    ----------
-    model : :class:`~cobra.core.Model` object
+    :param model: :class:`~cobra.core.Model` to be operated on
 
-    already_irreversible : bool, optional
-        By default, the model is converted to an irreversible one.
-        However, if the model is already irreversible, this step can be
-        skipped.
+    :param already_irreversible: Skip making the model irreversible.
+    :type already_irreversible: bool
 
     """
     if "new_objective" in optimize_kwargs:
