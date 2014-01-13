@@ -37,9 +37,6 @@ class Reaction(Object):
         """An object for housing reactions and associated information
         for cobra modeling..
 
-        boundary: Boolean.  Indicates whether the reaction is at a boundary, i.e.,
-        a source or a sink.
-        
         """
         Object.__init__(self, name)
         self._gene_reaction_rule = ''
@@ -121,7 +118,8 @@ class Reaction(Object):
     def remove_from_model(self, model=None):
         """Removes the association
 
-        model: cobra.Model object.  remove the reaction from this model.
+        model: :class:`~cobra.core.Model` object.
+            Remove the reaction from this model.
         
         """
         # why is model being taken in as a parameter? This plays
