@@ -299,10 +299,8 @@ class Reaction(Object):
         
 
     def parse_gene_association(self, the_type='gene'):
-        """Extract all genes from the Boolean Gene_Association string.
-
-        #Formerly, update_names
-        """
+        """Extract all genes from the Boolean Gene_Association string."""
+        # TODO: deprecate and move to setter
         if the_type == 'gene':
             self._genes = set((re.compile(' {2,}').sub(' ', re.compile('\(| and| or|\+|\)').sub('', self._gene_reaction_rule))).split(' ' ))
             if '' in self._genes:
@@ -350,8 +348,10 @@ class Reaction(Object):
         """Return the stoichiometric coefficient for a metabolite in
         the reaction.
 
-        :param metabolite_id: The id for a metabolite in the reaction
-        
+        Parameters
+        ----------
+        metabolite_id : The id for a metabolite in the reaction
+
         """
         _id_to_metabolites = dict([(x.id, x)
                                         for x in self._metabolites])
@@ -440,9 +440,7 @@ class Reaction(Object):
 
 
     def build_reaction_string(self, use_metabolite_names=False):
-        """Generate a human readable reaction string.
-        
-        """
+        """Generate a human readable reaction string."""
         reactant_dict = {}
         product_dict = {}
         id_type = 'id'
