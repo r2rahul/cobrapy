@@ -17,11 +17,11 @@ try:
     PyDictProxy_New.argtypes = (py_object,)
     PyDictProxy_New.rettype = py_object
 
-    def make_dictproxy(obj):
+    def _make_dictproxy(obj):
         assert isinstance(obj,dict)
         return PyObj_FromPtr(PyDictProxy_New(obj))
 except:
-    make_dictproxy = lambda x: x
+    _make_dictproxy = lambda x: x
 
 class Reaction(Object):
     """Reaction is a class for holding information regarding
@@ -63,7 +63,7 @@ class Reaction(Object):
     # read-only
     @property
     def metabolites(self):
-        return make_dictproxy(self._metabolites)
+        return _make_dictproxy(self._metabolites)
 
     @property
     def genes(self):
@@ -80,12 +80,7 @@ class Reaction(Object):
 
     @property
     def reversibility(self):
-        """This property removes the independence of the reversibility attribute and the reaction's
-        current upper and lower bounds.
-
-        reversibility is defined in the context of the current instantiation.
-        
-        """
+        """The reaction's reversibility computed from its bounds"""
         return self.lower_bound < 0 and self.upper_bound > 0
     
     @property
@@ -333,17 +328,13 @@ class Reaction(Object):
 
     @property
     def reactants(self):
-        """Return a list of reactants for the reaction.
-
-        """
+        """Return a list of reactants for the reaction."""
         return [k for k, v in self._metabolites.items()
                 if v < 0]
 
     @property
     def products(self):
-        """Return a list of products for the reaction
-        
-        """
+        """Return a list of products for the reaction"""
         return [k for k, v in self._metabolites.items()
                 if v > 0]
 
@@ -355,19 +346,19 @@ class Reaction(Object):
         return list(self._genes)
 
 
-    def get_coefficient(self, the_metabolite):
+    def get_coefficient(self, metabolite_id):
         """Return the stoichiometric coefficient for a metabolite in
         the reaction.
 
-        the_metabolite: A metabolite Id.
+        :param metabolite_id: The id for a metabolite in the reaction
         
         """
         _id_to_metabolites = dict([(x.id, x)
                                         for x in self._metabolites])
 
-        if hasattr(the_metabolite, 'id'):
-            the_metabolite = the_metabolite.id
-        return self._metabolites[_id_to_metabolites[the_metabolite]]
+        if hasattr(metabolite_id, 'id'):
+            metabolite_id = metabolite_id.id
+        return self._metabolites[_id_to_metabolites[metabolite_id]]
     
     def get_coefficients(self, the_metabolites):
         """Return the stoichiometric coefficients for a list of
@@ -444,6 +435,7 @@ class Reaction(Object):
 
     @property
     def reaction(self):
+        """a human-readable reaction string"""
         return self.build_reaction_string()
 
 
@@ -539,7 +531,7 @@ class Reaction(Object):
     def add_gene(self, cobra_gene):
         """Associates a cobra.Gene object with a cobra.Reaction.
 
-        cobra_gene: :class:`~cobra.core.Gene`. A gene to associate with the reaction.
+        cobra_gene: A :class:`~cobra.core.Gene` to associate with the reaction.
         """
         #warn("deprecated: update the gene_reaction_rule instead")
         try:
