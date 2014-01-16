@@ -35,7 +35,7 @@ class Reaction(Object):
 
     def __init__(self, name=None):
         """An object for housing reactions and associated information
-        for cobra modeling..
+        for cobra modeling.
 
         """
         Object.__init__(self, name)
@@ -63,14 +63,21 @@ class Reaction(Object):
     # read-only
     @property
     def metabolites(self):
+        """Read-only dict of {metabolite: coefficient}"""
         return _make_dictproxy(self._metabolites)
 
     @property
     def genes(self):
+        """Read-only set of associated genes"""
         return frozenset(self._genes)
 
     @property
     def gene_reaction_rule(self):
+        """Boolean representation of the gene requirements for this reaction
+
+        See Schellenberger et al. http://dx.doi.org/10.1038/nprot.2011.308
+
+        """
         return self._gene_reaction_rule
 
     @gene_reaction_rule.setter
@@ -85,6 +92,7 @@ class Reaction(Object):
     
     @property
     def boundary(self):
+        """If the reaction is a system boundary exchanging metabolites"""
         # single metabolite implies it must be a boundary
         if len(self._metabolites) == 1:
             return "system_boundary"
@@ -113,9 +121,11 @@ class Reaction(Object):
     def remove_from_model(self, model=None):
         """Removes the association
 
-        model: :class:`~cobra.core.Model` object.
+        Parameters
+        ----------
+        model : :class:`~cobra.core.Model` object.
             Remove the reaction from this model.
-        
+
         """
         # why is model being taken in as a parameter? This plays
         #back to the question of allowing a Metabolite to be associated
@@ -201,13 +211,15 @@ class Reaction(Object):
         """Trying to make a faster copy procedure for cases where large
         numbers of metabolites might be copied.  Such as when copying reactions.
 
-       the_model: The new container cobra.Model
+        Parameters
+        ----------
+        the_model : The new container class:`~cobra.core.Model`
 
-       metabolite_dict: A dictionary of the cobra.Metabolite objects that are in
-       the model (metabolite.id, metabolite)
+        metabolite_dict : dict of {metabolite.id: metabolite}
+            The cobra.Metabolite objects should be in the model
 
-        gene_dict: A dictionary of the cobra.Gene objects that are in the model (gene.id, gene)
-
+        gene_dict : dict of {gene.id: gene}
+            The cobra.Gene objects should be in the model
 
         """
         the_copy = Object.guided_copy(self)
@@ -280,9 +292,7 @@ class Reaction(Object):
         return new_reaction
 
     def __imul__(self, the_coefficient):
-        """Allows the reaction coefficients to be rapidly scaled.
-        
-        """
+        """Allows the reaction coefficients to be rapidly scaled."""
         [self._metabolites.update({k: the_coefficient * v})
          for k, v in self._metabolites.items()]
         return self
@@ -291,7 +301,7 @@ class Reaction(Object):
         """Allows a reaction to be multipled by a coeffient.
         
         Should this return a new reaction?
-        
+
         """
         [self._metabolites.update({k: the_coefficient * v})
          for k, v in self._metabolites.items()]
@@ -299,7 +309,11 @@ class Reaction(Object):
         
 
     def parse_gene_association(self, the_type='gene'):
-        """Extract all genes from the Boolean Gene_Association string."""
+        """Extract all genes from the Boolean Gene_Association string.
+
+        .. deprecated:: 0.3
+            This occurs by default when the gene_reaction_rule is set
+        """
         # TODO: deprecate and move to setter
         if the_type == 'gene':
             self._genes = set((re.compile(' {2,}').sub(' ', re.compile('\(| and| or|\+|\)').sub('', self._gene_reaction_rule))).split(' ' ))
@@ -312,6 +326,9 @@ class Reaction(Object):
 
     def add_gene_reaction_rule(self, the_rule):
         """This adds a gene reaction rule.
+
+        .. deprecated:: 0.3
+            assign to gene_reaction_rule directly
 
         the_rule:  A boolean representation of the gene requirements for this reaction
         to be active as described in Schellenberger et al 2011 Nature Protocols 6(9):1290-307.
@@ -374,15 +391,20 @@ class Reaction(Object):
         If the final coefficient for a metabolite is 0 then it is removed
         from the reaction.
 
-        the_metabolites: A dict of cobra.Metabolites and their coefficient
+        Parameters
+        ----------
+        the_metabolites : dict of {cobra.Metabolites: coefficient}
 
-        combine: Boolean. If True and a metabolite already exists in the
-        reaction then the coefficients will be added.  If False the old
-        metabolite will be discarded and the new one added.
+        combine : bool
+            If True and a metabolite already exists in the
+            reaction then the coefficients will be added.
+            If False the old metabolite will be discarded
+            and the new one added.
 
-        add_to_container_model: Boolean.  If True and this reaction is
-        contained within a cobra.Model (i.e., self._model is a cobra.Model)
-        then add the metabolite to the model.
+        add_to_container_model : bool
+            If True and this reaction is contained within a
+            cobra.Model (i.e., self._model is a cobra.Model),
+            then add the metabolite to the model.
 
         """
         _id_to_metabolites = dict([(x.id, x)
@@ -471,9 +493,7 @@ class Reaction(Object):
 
 
     def check_mass_balance(self):
-        """Makes sure that the reaction is elementally-balanced.
-
-        """
+        """Makes sure that the reaction is elementally-balanced."""
         reaction_element_dict = defaultdict(list)
         for the_metabolite, the_coefficient in self._metabolites.items():
             if the_metabolite.formula is not None:
@@ -511,8 +531,14 @@ class Reaction(Object):
     def remove_gene(self, cobra_gene):
         """Removes the association between a gene and a reaction
 
-        cobra_gene: :class:`~cobra.core.Gene`. A gene that is associated with the reaction.
-        
+        Parameters
+        ----------
+        cobra_gene : :class:`~cobra.core.Gene`.
+            A gene that is associated with the reaction.
+
+        .. deprecated:: 0.3
+            Update the gene_reaction_rule instead
+
         """
         #warn("deprecated: update the gene_reaction_rule instead")
         try:
@@ -529,8 +555,14 @@ class Reaction(Object):
     def add_gene(self, cobra_gene):
         """Associates a cobra.Gene object with a cobra.Reaction.
 
-        cobra_gene: A :class:`~cobra.core.Gene` to associate with the reaction.
+        Parameters
+        ----------
+        cobra_gene : A :class:`~cobra.core.Gene`
+
+        .. deprecated:: 0.3
+            Update the gene_reaction_rule instead
         """
+        #TODO convert to internal only function to be run by the setter
         #warn("deprecated: update the gene_reaction_rule instead")
         try:
             self._genes.add(cobra_gene)
@@ -543,4 +575,4 @@ class Reaction(Object):
                     self.add_gene(cobra_gene)
             except:
                 raise Exception('Unable to add gene %s to reaction %s: %s'%(cobra_gene.id, self.id, e))
-                            
+

@@ -21,18 +21,21 @@ class Species(Object):
     def __init__(self, id=None, formula=None,
                  name=None, compartment=None, mnx_id=None):
         """
-        id: A string.
+        Parameters
+        ----------
+        id : str
 
-        formula: cobra.Formula or String  of a chemical formula.  Defaults to None
-        to save time in pickling and such.
+        formula : cobra.Formula or str of a chemical formula.
+
+        name : str
+            A human readable name.
         
-        name: String.  A human readable name.
+        compartment : None or a dictionary
+            Indicates the cellular location of the metabolite.
+            Used when in a cobra.Reaction or Model object
         
-        compartment: None or a dictionary indicating the cellular location
-        of the metabolite.  Used when in a cobra.Reaction or Model
-        object
-        
-        mnx_id: None or a String of the MetaNetX.org ID for the object.
+        mnx_id: str
+            The MetaNetX.org ID for the object.
 
         """
         Object.__init__(self, id, mnx_id=mnx_id)

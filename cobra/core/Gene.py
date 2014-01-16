@@ -1,7 +1,3 @@
-#cobra.Gene.py
-#######################
-#BEGIN Class Gene
-#
 import re
 from .Species import Species
 class Gene(Species):
@@ -14,26 +10,32 @@ class Gene(Species):
                  name=None, compartment=None, strand='+',
                  locus_start=0, locus_end=0, functional=True):
         """
-        id: A string.
+        Parameters
+        ----------
+        id : str
 
-        formula: cobra.Formula or String  of a chemical formula.  Defaults to None
-        to save time in pickling and such.
+        formula : cobra.Formula or str of a chemical formula.
         
-        name: String.  A human readable name.
+        name : str
+            A human readable name.
         
-        compartment: None or a dictionary indicating the cellular location
-        of the metabolite.  Used when in a cobra.Reaction or Model
-        object
+        compartment : None or a dictionary
+            Indicates the cellular location of the metabolite.
+            Used when in a cobra.Reaction or Model object (?)
 
-        strand: '+' or '-' to indicate forward or reverse strand for DNA.
+        strand : '+' or '-'
+            forward or reverse strand for DNA.
 
-        locus_start: Int.  The index of the starting base for the gene.
+        locus_start : int
+            The index of the starting base for the gene.
 
-        locus_end: Int. The index of the last base for the gene.
+        locus_end : int
+            The index of the last base for the gene.
 
-        functional: Boolean.  Indicate whether the gene is functional.  If it
-        is not functional then it cannot be used in an enzyme complex nor
-        can its products be used.
+        functional : bool
+            Indicate whether the gene is functional.  If it
+            is not functional then it cannot be used in an enzyme complex nor
+            can its products be used.
         
         """
         Species.__init__(self, id, formula=formula,
@@ -55,15 +57,17 @@ class Gene(Species):
                           make_dependent_reactions_nonfunctional=True):
         """Removes the association
 
-        the_model: :class:`~cobra.core.Model` object.
+        TODO:  Better handling of the gene association
+
+        Parameters
+        ----------
+        the_model : :class:`~cobra.core.Model` object
             Remove the reaction from this model.
 
-        make_dependent_reactions_nonfunctional: Boolean.  If True then replace
-        the gene with 'False' in the gene association, else replace the gene
-        with 'True'
+        make_dependent_reactions_nonfunctional : Boolean.
+            If True then replace the gene with 'False' in the gene association,
+            else replace the gene with 'True'
 
-        TODO:  Better handling of the gene association
-        
         """
         if make_dependent_reactions_nonfunctional:
             gene_state = 'False'
@@ -91,7 +95,4 @@ class Gene(Species):
             if not eval(the_gene_reaction_relation):
                 the_reaction.lower_bound = 0
                 the_reaction.upper_bound = 0
-                                       
-#
-#END Class Gene
-########################
+

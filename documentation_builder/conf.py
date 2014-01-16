@@ -55,6 +55,16 @@ for mod_name in MOCK_MODULES:
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx',
               'sphinx.ext.mathjax', 'sphinx.ext.viewcode', 'numpydoc']
 
+#autoclass_content = 'both'  # document __init__
+# Ensure that the __init__ method gets documented.
+def skip(app, what, name, obj, skip, options):
+    if name == "__init__":
+        return False
+    return skip
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
