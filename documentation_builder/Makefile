@@ -16,6 +16,9 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
 
+install.rst:
+	pandoc --from=markdown --to=rst ../INSTALL.md | sed 's/documentation_builder//;s/\.rst>`_/>`/' > install.rst
+
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  html       to make standalone HTML files"
@@ -41,7 +44,7 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-html:
+html: 
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

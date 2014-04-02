@@ -5,6 +5,7 @@ Documentation for COBRApy
     :maxdepth: 2
 
     introduction
+    install
     reactions
     metabolites
     01_create_model
